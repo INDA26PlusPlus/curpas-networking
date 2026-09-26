@@ -306,7 +306,7 @@ impl State {
             }
         }
 
-        if msg == "OK" {
+        if msg == "OK" || msg == "CHECKMATE" || msg == "STALEMATE" {
             let _ = self.board.make_and_validate_move(mv);
             if self.board.is_checkmate() {
                 self.game_state = match self.side {
@@ -597,15 +597,17 @@ impl ggez::event::EventHandler for State {
                                 self.game_state = match self.side {
                                     'w' => 3,
                                     _ => 1,
-                                }
+                                };
+                                let _ = writeln!(self.writer, "CHECKMATE");
                             }
                             else if self.board.is_stalemate() {
                                 self.game_state = 2;
+                                let _ = writeln!(self.writer, "STALEMATE");
                             }
                             else {
                                 self.waiting = false;
+                                let _ = writeln!(self.writer, "OK");
                             }
-                            let _ = writeln!(self.writer, "OK");
                         }
                     }
                     Err(_e) => {
