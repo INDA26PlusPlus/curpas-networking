@@ -10,6 +10,8 @@ use std::net::TcpListener;
 // ToDo: Possibly add support for different screen resolutions
 static TOP_LEFT: [f32; 2] = [448.0, 28.0];
 static GAME_SCALE: f32 = 4.0;
+static HARD_FOG_SCALE: f32 = 12.0;
+static SOFT_FOG_SCALE: f32 = 5.0;
 static PROMOTION_MARGIN: f32 = 30.0;
 
 struct Ember {
@@ -192,18 +194,18 @@ impl State {
         let image_promo = graphics::Image::from_path(ctx, "/promotion.png")?;
         let image_eyes_no_glow = upscale_image(ctx, &graphics::Image::from_path(ctx, "/eyes.png")?, GAME_SCALE as usize)?;
         let image_eyes = add_glow(ctx, &image_eyes_no_glow, 7, 0.04)?;
-        let pixels = (0..16 * 16).flat_map(|i| {
-                let x = i % 16;
-                let y = i / 16;
+        let pixels = (0..8 * 8).flat_map(|i| {
+                let x = i % 8;
+                let y = i / 8;
 
-                if (6..10).contains(&x) && (6..10).contains(&y) {
+                if (2..6).contains(&x) && (2..6).contains(&y) {
                     [255, 255, 255, 255]
                 } else {
                     [0, 0, 0, 0]
                 }
             }).collect::<Vec<u8>>();
 
-        let image_ember_no_glow = graphics::Image::from_pixels(ctx, &pixels, graphics::ImageFormat::Rgba8UnormSrgb, 16, 16);
+        let image_ember_no_glow = graphics::Image::from_pixels(ctx, &pixels, graphics::ImageFormat::Rgba8UnormSrgb, 8, 8);
         let image_ember = add_glow(ctx, &image_ember_no_glow, 7, 0.07)?;
 
         let promoting_move = None;
@@ -440,12 +442,12 @@ pub fn noise(x: f32, y: f32, z: f32) -> f32 {
 }
 
 fn hard_fog_pixel(x: u32, y: u32, t: f32, fog_mask: Vec<u8>) -> (u8, u8, u8, u8) {
-    let brightness = ((noise((x as f32)*0.03, (y as f32)*0.03, -t*0.0001))/10.0) + 0.1;
+    let brightness = ((noise((x as f32)*HARD_FOG_SCALE*0.004, (y as f32)*HARD_FOG_SCALE*0.004, -t*0.00006))/10.0) + 0.1;
     let br = (brightness*255.0).clamp(0.0, 255.0) as u8;
     let mut a = 255u8;
     
-    let scale_x = ((x as f32) - (TOP_LEFT[0] / GAME_SCALE)) / 32.0 - 0.5;
-    let scale_y = ((y as f32) - (TOP_LEFT[1] / GAME_SCALE)) / 32.0 - 0.5;
+    let scale_x = ((x as f32) - (TOP_LEFT[0] / HARD_FOG_SCALE)) / (32.0 * (GAME_SCALE/HARD_FOG_SCALE)) - 0.5;
+    let scale_y = ((y as f32) - (TOP_LEFT[1] / HARD_FOG_SCALE)) / (32.0 * (GAME_SCALE/HARD_FOG_SCALE)) - 0.5;
 
     if scale_x >= -0.5 && scale_x < 7.5 && scale_y >= -0.5 && scale_y < 7.5 {
         let mut op_tl = 255u8;
@@ -483,7 +485,7 @@ fn soft_fog_pixel(x: u32, y: u32, t: f32) -> (u8, u8, u8, u8) {
     let g = 120u8;
     let b = 120u8;
 
-    let a2: f32 = noise((x as f32)*0.01 + 0.0001*t, (y as f32)*0.05 + 0.0001*t, 0.0001*t)-0.5;
+    let a2: f32 = noise((x as f32)*SOFT_FOG_SCALE*0.003 + 0.00015*t, (y as f32)*SOFT_FOG_SCALE*0.012 + 0.00015*t, 0.00006*t)-0.5;
     let a_out = (a2*255.0).clamp(0.0, 255.0) as u8;
 
     (r, g, b, a_out)
@@ -617,7 +619,7 @@ impl ggez::event::EventHandler for State {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        // println!("dt: {}.{}ms", self.dt.as_nanos() / 1000000, self.dt.as_nanos() / 10000 - (100 * (self.dt.as_nanos() / 1000000)));
+        println!("dt: {}.{}ms", self.dt.as_nanos() / 1000000, self.dt.as_nanos() / 10000 - (100 * (self.dt.as_nanos() / 1000000)));
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::from_rgb(20, 35, 20));
         canvas.set_sampler(graphics::Sampler::nearest_clamp());
         let screen = ctx.gfx.drawable_size();
@@ -678,8 +680,8 @@ impl ggez::event::EventHandler for State {
                     let p = 1.0 - (28.0_f32 / 30.0).powf((self.dt.as_nanos() as f32 / 1000_000_000.0) * 30.0);
                     if rand::rng().random_bool(p as f64) {
                         self.embers.push(Ember {
-                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 5.0*GAME_SCALE,
-                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 22.0*GAME_SCALE,
+                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 7.0*GAME_SCALE,
+                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 24.0*GAME_SCALE,
                             color: graphics::Color::new(rand::rng().random::<f32>() * 0.5 + 0.5, rand::rng().random::<f32>() * 0.2 + 0.25, 0.25, 1.0),
                             brightness: 1.0,
                         });
@@ -689,8 +691,8 @@ impl ggez::event::EventHandler for State {
                     let p = 1.0 - (26.0_f32 / 30.0).powf((self.dt.as_nanos() as f32 / 1000_000_000.0) * 30.0);
                     if rand::rng().random_bool(p as f64) {
                         self.embers.push(Ember {
-                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 12.0*GAME_SCALE,
-                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 20.0*GAME_SCALE,
+                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 14.0*GAME_SCALE,
+                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 22.0*GAME_SCALE,
                             color: graphics::Color::new(rand::rng().random::<f32>() * 0.5 + 0.5, rand::rng().random::<f32>() * 0.2 + 0.25, 0.25, 1.0),
                             brightness: 1.0,
                         });
@@ -700,8 +702,8 @@ impl ggez::event::EventHandler for State {
                     let p = 1.0 - (26.0_f32 / 30.0).powf((self.dt.as_nanos() as f32 / 1000_000_000.0) * 30.0);
                     if rand::rng().random_bool(p as f64) {
                         self.embers.push(Ember {
-                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 13.0*GAME_SCALE,
-                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 20.0*GAME_SCALE,
+                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 15.0*GAME_SCALE,
+                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 22.0*GAME_SCALE,
                             color: graphics::Color::new(rand::rng().random::<f32>() * 0.5 + 0.5, rand::rng().random::<f32>() * 0.2 + 0.25, 0.25, 1.0),
                             brightness: 1.0,
                         });
@@ -731,8 +733,8 @@ impl ggez::event::EventHandler for State {
                             }
                         }
                         self.embers.push(Ember {
-                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 11.5*GAME_SCALE,
-                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 14.0*GAME_SCALE,
+                            x: TOP_LEFT[0] + (32.0*GAME_SCALE*((match self.side {'b' => 7-c, _ => c}) as f32)) + 13.5*GAME_SCALE,
+                            y: TOP_LEFT[1] + (32.0*GAME_SCALE*((match self.side {'w' => 7-r, _ => r}) as f32)) + 16.0*GAME_SCALE,
                             color: c4,
                             brightness: 1.0,
                         });
@@ -856,12 +858,12 @@ impl ggez::event::EventHandler for State {
                 graphics::DrawParam::new()
                     .color(c3)
                     .dest([e.x, e.y])
-                    .scale([2.0, 2.0])
+                    .scale([GAME_SCALE/2.0, GAME_SCALE/2.0])
             );
         }
 
         // Destroy dead embers
-        self.embers.retain(|e| e.brightness > 0.02);
+        self.embers.retain(|e| e.brightness > 0.2);
 
         // Pieces layer 2
 
@@ -920,8 +922,8 @@ impl ggez::event::EventHandler for State {
 
         // Hard fog
 
-        let width = (screen.0 as u32) / (GAME_SCALE as u32);
-        let height = (screen.1 as u32) / (GAME_SCALE as u32);
+        let width = (screen.0 as u32) / (HARD_FOG_SCALE as u32);
+        let height = (screen.1 as u32) / (HARD_FOG_SCALE as u32);
 
         let mut pixels = Vec::with_capacity((width * height * 4) as usize);
 
@@ -946,7 +948,7 @@ impl ggez::event::EventHandler for State {
 
         canvas.draw(
             &image,
-            graphics::DrawParam::default().scale([GAME_SCALE, GAME_SCALE]),
+            graphics::DrawParam::default().scale([HARD_FOG_SCALE, HARD_FOG_SCALE]),
         );
 
         // Eyes
@@ -1002,8 +1004,8 @@ impl ggez::event::EventHandler for State {
 
         // Soft Fog
 
-        let width = (screen.0 as u32) / (GAME_SCALE as u32);
-        let height = (screen.1 as u32) / (GAME_SCALE as u32);
+        let width = (screen.0 as u32) / (SOFT_FOG_SCALE as u32);
+        let height = (screen.1 as u32) / (SOFT_FOG_SCALE as u32);
 
         let mut pixels = Vec::with_capacity((width * height * 4) as usize);
 
@@ -1028,7 +1030,7 @@ impl ggez::event::EventHandler for State {
 
         canvas.draw(
             &image,
-            graphics::DrawParam::default().scale([GAME_SCALE, GAME_SCALE]),
+            graphics::DrawParam::default().scale([SOFT_FOG_SCALE, SOFT_FOG_SCALE]),
         );
 
         canvas.finish(ctx)?;
