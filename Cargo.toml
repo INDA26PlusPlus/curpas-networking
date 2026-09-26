@@ -1,0 +1,9 @@
+[package]
+name = "chess"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chesslib = { git = "https://github.com/INDA26PlusPlus/simonph-chess"}
+ggez = "0.10.0"
+rand = "0.9"
