@@ -290,9 +290,8 @@ impl State {
     }
 
     fn make_move(&mut self, mv: IntMove) {
-        let _ = writeln!(self.writer, "{}", format_move(mv));
-        let _ = writeln!(self.writer, "{}", self.board.get_board_representation());
-        
+        let _ = writeln!(self.writer, "{}{}", format_move(mv), self.board.get_board_representation());
+
         let mut msg = String::new();
         while msg == "" {
             let r = self.reader.read_line(&mut msg);
@@ -572,24 +571,14 @@ impl ggez::event::EventHandler for State {
                 Err(e) => {println!("Socket error: {}", e)}    
             }
             if msg != "" {
-                let mv = unformat_move(msg);
+                let (msg_mv, msg_b) = msg.split_at(5);
+                let mv = unformat_move(msg_mv.to_string());
                 let b = self.board.get_board_representation().trim_end().to_string();
                 let r = self.board.make_and_validate_move(mv);
                 match r {
                     Ok(_) => {
-                        msg = String::new();
-                        while msg == "" {
-                            let r = self.reader.read_line(&mut msg);
-                            match r {
-                                Ok(_) => {
-                                    msg = msg.trim_end().to_string();
-                                }
-                                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
-                                Err(e) => {println!("Socket error: {}", e)}    
-                            };
-                        }
-                        if msg != b {
-                            println!("Communication error, boards {} and {} do not match", msg, b);
+                        if msg_b.to_string() != b {
+                            println!("Communication error, boards {} and {} do not match", msg_b, b);
                             let _ = writeln!(self.writer, "REJECT");
                         }
                         else {
