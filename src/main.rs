@@ -290,7 +290,9 @@ impl State {
     }
 
     fn make_move(&mut self, mv: IntMove) {
-        let _ = writeln!(self.writer, "{}{}", format_move(mv), self.board.get_board_representation());
+        let mut b2 = self.board.clone();
+        let _ = b2.make_and_validate_move(mv);
+        let _ = writeln!(self.writer, "{}{}", format_move(mv), b2.get_board_representation());
 
         let mut msg = String::new();
         while msg == "" {
@@ -573,8 +575,9 @@ impl ggez::event::EventHandler for State {
             if msg != "" {
                 let (msg_mv, msg_b) = msg.split_at(5);
                 let mv = unformat_move(msg_mv.to_string());
-                let b = self.board.get_board_representation().trim_end().to_string();
-                let r = self.board.make_and_validate_move(mv);
+                let mut b2 = self.board.clone();
+                let r = b2.make_and_validate_move(mv);
+                let b = b2.get_board_representation().trim_end().to_string();
                 match r {
                     Ok(_) => {
                         if msg_b.to_string() != b {
@@ -582,6 +585,7 @@ impl ggez::event::EventHandler for State {
                             let _ = writeln!(self.writer, "REJECT");
                         }
                         else {
+                            self.board.make_and_validate_move(mv);
                             if self.board.is_checkmate() {
                                 self.game_state = match self.side {
                                     'w' => 3,
