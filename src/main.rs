@@ -258,6 +258,7 @@ impl State {
             writer = stream;
 
             let mut msg = String::new();
+            msg = msg.trim_end().to_string();
             while msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" && msg != "W" && msg != "B" {
                 let r = reader.read_line(&mut msg);
                 match r {
@@ -297,6 +298,7 @@ impl State {
         println!("{s}");
 
         let mut msg = String::new();
+        msg = msg.trim_end().to_string();
         while msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" && msg != "W" && msg != "B" {
             let r = self.reader.read_line(&mut msg);
             match r {
