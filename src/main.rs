@@ -574,7 +574,7 @@ impl ggez::event::EventHandler for State {
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => {println!("Socket error: {}", e)}    
             }
-            if msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" {
+            if msg == "OK" || msg == "REJECT" || msg == "CHECKMATE" || msg == "STALEMATE" {
                 let (msg_mv, msg_b) = msg.split_at(5);
                 let mv = unformat_move(msg_mv.to_string());
                 let mut b2 = self.board.clone();
