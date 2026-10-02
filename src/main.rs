@@ -297,7 +297,7 @@ impl State {
         println!("{s}");
 
         let mut msg = String::new();
-        while msg == "" {
+        while msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" && msg != "W" && msg != "B" {
             let r = self.reader.read_line(&mut msg);
             match r {
                 Ok(_) => {
