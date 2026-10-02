@@ -304,7 +304,6 @@ impl State {
             match r {
                 Ok(_) => {
                     msg = msg.trim_end().to_string();
-                    break;
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => {println!("Socket error: {}", e)}    
