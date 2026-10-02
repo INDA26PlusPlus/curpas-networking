@@ -568,10 +568,9 @@ impl ggez::event::EventHandler for State {
         if self.waiting {
             let mut msg = String::new();
             let r = self.reader.read_line(&mut msg);
+            msg = msg.trim_end().to_string();
             match r {
-                Ok(_) => {
-                    msg = msg.trim_end().to_string();
-                }
+                Ok(_) => {}
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => {println!("Socket error: {}", e)}    
             }
