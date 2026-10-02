@@ -575,7 +575,7 @@ impl ggez::event::EventHandler for State {
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => {println!("Socket error: {}", e)}    
             }
-            if msg.len() == 69 {
+            if msg.len() >= 8 {
                 let (msg_mv, msg_b) = msg.split_at(5);
                 let mv = unformat_move(msg_mv.to_string());
                 let mut b2 = self.board.clone();
