@@ -292,7 +292,9 @@ impl State {
     fn make_move(&mut self, mv: IntMove) {
         let mut b2 = self.board.clone();
         let _ = b2.make_and_validate_move(mv);
-        let _ = writeln!(self.writer, "{}{}", format_move(mv), b2.get_board_representation());
+        let s = format!("{}{}", format_move(mv), b2.get_board_representation());
+        let _ = writeln!(self.writer, "{s}");
+        println!("{s}")
 
         let mut msg = String::new();
         while msg == "" {
@@ -614,7 +616,7 @@ impl ggez::event::EventHandler for State {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        println!("dt: {}.{}ms", self.dt.as_nanos() / 1000000, self.dt.as_nanos() / 10000 - (100 * (self.dt.as_nanos() / 1000000)));
+        // println!("dt: {}.{}ms", self.dt.as_nanos() / 1000000, self.dt.as_nanos() / 10000 - (100 * (self.dt.as_nanos() / 1000000)));
         let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::from_rgb(20, 35, 20));
         canvas.set_sampler(graphics::Sampler::nearest_clamp());
         let screen = ctx.gfx.drawable_size();
@@ -1048,7 +1050,7 @@ fn main() -> GameResult {
         }
     }
     else {
-        ip = format!("127.0.0.1:{}", port);
+        ip = format!("0.0.0.0:{}", port);
     }
     let c = conf::Conf::new();
     let (mut ctx, event_loop) = ContextBuilder::new("Chess", "Curpas")
