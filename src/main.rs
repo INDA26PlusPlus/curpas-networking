@@ -258,7 +258,7 @@ impl State {
             writer = stream;
 
             let mut msg = String::new();
-            while msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" {
+            while msg != "OK" && msg != "REJECT" && msg != "CHECKMATE" && msg != "STALEMATE" && msg != "W" && msg != "B" {
                 let r = reader.read_line(&mut msg);
                 match r {
                     Ok(_) => {
