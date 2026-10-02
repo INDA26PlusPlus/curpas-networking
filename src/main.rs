@@ -294,7 +294,7 @@ impl State {
         let _ = b2.make_and_validate_move(mv);
         let s = format!("{}{}", format_move(mv), b2.get_board_representation());
         let _ = writeln!(self.writer, "{s}");
-        println!("{s}")
+        println!("{s}");
 
         let mut msg = String::new();
         while msg == "" {
@@ -585,6 +585,7 @@ impl ggez::event::EventHandler for State {
                         if msg_b.to_string() != b {
                             println!("Communication error, boards {} and {} do not match", msg_b, b);
                             let _ = writeln!(self.writer, "REJECT");
+                            println!("REJECT");
                         }
                         else {
                             self.board.make_and_validate_move(mv);
@@ -594,19 +595,23 @@ impl ggez::event::EventHandler for State {
                                     _ => 1,
                                 };
                                 let _ = writeln!(self.writer, "CHECKMATE");
+                                println!("CHECKMATE");
                             }
                             else if self.board.is_stalemate() {
                                 self.game_state = 2;
                                 let _ = writeln!(self.writer, "STALEMATE");
+                                println!("STALEMATE");
                             }
                             else {
                                 self.waiting = false;
                                 let _ = writeln!(self.writer, "OK");
+                                println!("OK");
                             }
                         }
                     }
                     Err(_e) => {
                         let _ = writeln!(self.writer, "REJECT");
+                        println!("REJECT");
                     }
                 }
             }
